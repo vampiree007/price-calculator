@@ -1,101 +1,144 @@
-import Image from "next/image";
+"use client";
+import { useCallback, useEffect, useState } from "react";
+import Table from "./components/table";
 
+const initialRows = { name: "", making_cost: null };
+const fallbackData = [
+  {
+    name: "Red rice bowl!",
+    making_cost: "120 INR",
+    commission: "60 INR",
+    discount: "24 INR",
+    total: "204 INR",
+  },
+  // More people...
+];
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="https://nextjs.org/icons/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              src/app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [commission, setCommission] = useState(0);
+  const [discount, setDiscount] = useState(0);
+  const [rows, setRows] = useState([initialRows]);
+  const [data, setData] = useState(fallbackData);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="https://nextjs.org/icons/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const addData = useCallback(
+    (item) => {
+      // CALCULATE COMISSION
+      const price = item.making_cost;
+      const comissionRate = commission / 100;
+      const spc = price / (1 - comissionRate);
+      const commissionAmount = spc - price;
+
+      // CALCULATE DISCOUNT
+      const discountRate = discount / 100;
+      const spcd = spc / (1 - discountRate);
+      const discountAmount = spcd - spc;
+      return { ...item, spc, commissionAmount, spcd, discountAmount };
+    },
+    [commission, discount]
+  );
+
+  useEffect(() => {
+    if (rows.length) {
+      const data = rows
+        .filter((item) => item.name && item.making_cost)
+        .map((item) => addData(item));
+      setData(data);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows, commission, discount, addData]);
+
+  const handleChange = (e, index) => {
+    const { name, value } = e.target;
+    setRows((prevRows) =>
+      prevRows.map((row, i) => (i === index ? { ...row, [name]: value } : row))
+    );
+  };
+
+  return (
+    <div className="m-3">
+      <h2 className="mt-5 text-gray-900">
+        <b>DEDUCTIONS</b>
+      </h2>
+      <div style={{ display: "flex" }}>
+        <div>
+          <div className="mt-2 mr-2">
+            <div className="flex items-center bg-white pl-3 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600">
+              <div className="shrink-0 select-none text-base text-gray-500 sm:text-sm/6">
+                Commission:
+              </div>
+              <input
+                id="company-website"
+                name="company-website"
+                type="number"
+                placeholder="Percentage"
+                onChange={(e) => setCommission(e.target.value)}
+                className="block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6"
+              />
+            </div>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="https://nextjs.org/icons/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+        <div>
+          <div className="mt-2">
+            <div className="flex items-center bg-white pl-3 outline outline-1 -outline-offset-1 outline-gray-300 focus-within:outline focus-within:outline-2 focus-within:-outline-offset-2 focus-within:outline-indigo-600">
+              <div className="shrink-0 select-none text-base text-gray-500 sm:text-sm/6">
+                Discount:
+              </div>
+              <input
+                id="compan"
+                name="company-website"
+                type="number"
+                placeholder="Percentage"
+                onChange={(e) => setDiscount(e.target.value)}
+                className="block min-w-0 grow py-1.5 pl-1 pr-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline focus:outline-0 sm:text-sm/6"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h2 className="mt-5 text-gray-900">
+        <b>ITEM LIST</b>
+      </h2>
+      {rows.map((row, i) => (
+        <div key={i}>
+          <div className="mt-2" style={{ display: "flex" }}>
+            <input
+              name="name"
+              value={row.name}
+              onChange={(e) => handleChange(e, i)}
+              type="text"
+              placeholder="Item name"
+              className="block w-full bg-white px-4 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6 mr-1"
+            />
+            <input
+              name="making_cost"
+              value={row.making_cost}
+              onChange={(e) => handleChange(e, i)}
+              type="number"
+              placeholder="Making cost"
+              className="block mr-2 w-full bg-white px-4 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+            />
+            <input
+              name="discount"
+              value={discount}
+              onChange={(e) => handleChange(e, i)}
+              type="number"
+              placeholder="Discount"
+              disabled
+              className="block w-full bg-white px-4 py-1.5 text-base text-gray-900 outline outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+            />
+          </div>
+        </div>
+      ))}
+      <button
+        type="button"
+        onClick={() =>
+          setRows((prevRows) => [...prevRows, { name: "", making_cost: null }])
+        }
+        className="mt-2 inline-flex items-center gap-x-1.5 rounded bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+      >
+        ADD ITEM
+      </button>
+      <Table data={data} />
     </div>
   );
 }
